@@ -1,5 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI , Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+import webbrowser
+import threading
+
 
 app = FastAPI()
 
@@ -40,3 +44,22 @@ def delete_user(user_id: int):
         return {"message": "User deleted successfully"}
     else:
         return {"message": "User not found"}
+    
+@app.middleware("http")
+async def capture_host_port(request: Request, call_next):
+    """
+    Capture host and port dynamically from incoming requests.
+    """
+    if not hasattr(app.state, "host_url"):
+        app.state.host_url = str(request.base_url)
+    response = await call_next(request)
+    return response
+
+@app.on_event("startup")
+def startup_event():
+    def open_browser():
+        # Wait until host_url is captured from first request
+        while not hasattr(app.state, "host_url"):
+            pass
+        webbrowser.open_new(app.state.host_url + "docs")
+    threading.Thread(target=open_browser, daemon=True).start()

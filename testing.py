@@ -14,6 +14,13 @@ user_db = {
     7: {"name": "Grace", "age": 32}, 
 }
 
+
+@app.get("/")
+def home():
+    return {"message": "Welcome to the User API. Use /docs to explore."}
+
+
+
 class User(BaseModel):
     name: str
     age: int    
